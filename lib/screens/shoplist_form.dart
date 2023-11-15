@@ -1,10 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shopping_list/screens/menu.dart';
+import 'package:shopping_list/widgets/left_drawer.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:shopping_list/widgets/left_drawer.dart'; // Impor drawer yang sudah dibuat sebelumnya
 
 class ShopFormPage extends StatefulWidget {
-  const ShopFormPage({Key? key});
+  const ShopFormPage({super.key});
 
   @override
   State<ShopFormPage> createState() => _ShopFormPageState();
@@ -20,22 +23,21 @@ class _ShopFormPageState extends State<ShopFormPage> {
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
     return Scaffold(
-      appBar: AppBar(
-        title: const Center(
-          child: Text(
-            'Form Tambah Produk',
+        appBar: AppBar(
+          title: const Center(
+            child: Text(
+              'Form Tambah Produk',
+            ),
           ),
+          backgroundColor: Colors.indigo,
+          foregroundColor: Colors.white,
         ),
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-      ),
-      drawer: const LeftDrawer(), // Tambahkan drawer yang sudah dibuat di sini
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        drawer: const LeftDrawer(),
+        body: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
@@ -69,6 +71,7 @@ class _ShopFormPageState extends State<ShopFormPage> {
                       borderRadius: BorderRadius.circular(5.0),
                     ),
                   ),
+                  // TODO: Tambahkan variabel yang sesuai
                   onChanged: (String? value) {
                     setState(() {
                       _price = int.parse(value!);
@@ -97,6 +100,7 @@ class _ShopFormPageState extends State<ShopFormPage> {
                   ),
                   onChanged: (String? value) {
                     setState(() {
+                      // TODO: Tambahkan variabel yang sesuai
                       _description = value!;
                     });
                   },
@@ -116,36 +120,35 @@ class _ShopFormPageState extends State<ShopFormPage> {
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(Colors.indigo),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: const Text('Produk berhasil tersimpan'),
-                              content: SingleChildScrollView(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Nama: $_name'),
-                                    Text('Harga: $_price'),
-                                    Text('Deskripsi: $_description'),
-                                    // Tambahkan value lainnya jika ada
-                                  ],
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  child: const Text('OK'),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                        _formKey.currentState!.reset();
+                        // Kirim ke Django dan tunggu respons
+                        // TODO: Ganti URL dan jangan lupa tambahkan trailing slash (/) di akhir URL!
+                        final response = await request.postJson(
+                          "http://localhost:8000/create-flutter/",
+                            jsonEncode(<String, String>{
+                              'name': _name,
+                              'price': _price.toString(),
+                              'description': _description,
+                              // TODO: Sesuaikan field data sesuai dengan aplikasimu
+                            }));
+                        if (response['status'] == 'success') {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
+                            content: Text("Produk baru berhasil disimpan!"),
+                          ));
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => MyHomePage()),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
+                            content:
+                                Text("Terdapat kesalahan, silakan coba lagi."),
+                          ));
+                        }
                       }
                     },
                     child: const Text(
@@ -155,10 +158,8 @@ class _ShopFormPageState extends State<ShopFormPage> {
                   ),
                 ),
               ),
-            ],
+            ]),
           ),
-        ),
-      ),
-    );
+        ));
   }
 }
