@@ -7,7 +7,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
 class ShopFormPage extends StatefulWidget {
-  const ShopFormPage({super.key});
+  const ShopFormPage({Key? key});
 
   @override
   State<ShopFormPage> createState() => _ShopFormPageState();
